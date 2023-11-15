@@ -7,19 +7,20 @@ class GearsSpider(scrapy.Spider):
     categories =['digital-cameras-9', 'camera-lenses-filters-12', 'video-cameras-camcorders-27', 'lighting-studio-20', 'drones-aerial-imaging-10', 'computers-electronics-3', 'vintage-camera-equipment-40', 'video-production-editing-equipment-65', 'camera-accessories-76']
 
     def start_requests(self):
-        url = "https://www.gearfocus.com/_next/data/i2gygxPqXIrPYrrZTXxS5/en/c/{}.json?page={}"
+        url = "https://www.gearfocus.com/_next/data/QbGNbfaQztiSSCf1iieFJ/en/c/{}.json?page={}"
         for cat in self.categories:
             yield scrapy.Request(url.format(cat, 1), callback=self.parse_page1, meta={'category': cat, 'url': url})
     
     def parse_page1(self, response):
+        #send current page to parse_page function
+        yield self.parse_page(response)
+        #Send the other pages to parse_page function
         url = response.meta['url']
         cat = response.meta['category']
         data = json.loads(response.text)
         total_pages = data['pageProps']['pageInfo']['totalPages']
         for page in range(2, total_pages+1):
             yield scrapy.Request(url.format(cat, page), callback=self.parse_page)
-        #send current page to parse_page function
-        yield self.parse_page(response)
         
     def parse_page(self, response):
         data = json.loads(response.text)
