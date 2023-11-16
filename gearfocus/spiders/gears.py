@@ -6,21 +6,27 @@ class GearsSpider(scrapy.Spider):
     name = "gears"
     categories =['digital-cameras-9', 'camera-lenses-filters-12', 'video-cameras-camcorders-27', 'lighting-studio-20', 'drones-aerial-imaging-10', 'computers-electronics-3', 'vintage-camera-equipment-40', 'video-production-editing-equipment-65', 'camera-accessories-76']
 
+    def __init__(self):
+        with open('Scripts/Env Data/API_KEY.json') as f:
+            key = json.load(f)['API_KEY']
+        super(GearsSpider, self).__init__()
+        self.API_KEY = key
+
     def start_requests(self):
-        url = "https://www.gearfocus.com/_next/data/QbGNbfaQztiSSCf1iieFJ/en/c/{}.json?page={}"
+        url = "https://www.gearfocus.com/_next/data/{}/en/c/{}.json?page={}"
         for cat in self.categories:
-            yield scrapy.Request(url.format(cat, 1), callback=self.parse_page1, meta={'category': cat, 'url': url})
+            yield scrapy.Request(url.format(self.API_KEY, cat, 1), callback=self.parse_page1, meta={'category': cat, 'url': url})
     
     def parse_page1(self, response):
         #send current page to parse_page function
-        yield self.parse_page(response)
+        self.parse_page(response)
         #Send the other pages to parse_page function
         url = response.meta['url']
         cat = response.meta['category']
         data = json.loads(response.text)
         total_pages = data['pageProps']['pageInfo']['totalPages']
         for page in range(2, total_pages+1):
-            yield scrapy.Request(url.format(cat, page), callback=self.parse_page)
+            yield scrapy.Request(url.format(self.API_KEY, cat, page), callback=self.parse_page)
         
     def parse_page(self, response):
         data = json.loads(response.text)
@@ -40,6 +46,7 @@ class GearsSpider(scrapy.Spider):
             condition = item['condition']
             brand = item['brand']
             description = item['description']
+            seller_id = item['seller_id']
             item_url = product_url.format(item['slug'])
             o=dict()
             o['title'] = title
@@ -53,6 +60,7 @@ class GearsSpider(scrapy.Spider):
             o['brand'] = brand
             o['description'] = description
             o['item_url'] = item_url
+            o['seller_id'] = seller_id
             yield o
             
             
