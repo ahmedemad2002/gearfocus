@@ -58,7 +58,7 @@ def update_file(file_path):
             item['seller_url'] = sellers_dict[item['seller_id']]['url']
         else:
             item = update_item_using_driver(item, driver)
-            if item['seller_name'] is None:
+            if item['seller_name'] is not None:
                 sellers_dict[item['seller_id']] = {'name': item['seller_name'], 'url': item['seller_url']}
     driver.quit()
     with open(file_path, 'w') as file:
